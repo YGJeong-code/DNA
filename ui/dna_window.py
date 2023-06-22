@@ -52,13 +52,15 @@ def delete_workspace_control(control):
         cmds.workspaceControl(control, e=True, close=True)
         cmds.deleteUI(control, control=True)
 
-class MyDockableWindow(MayaQWidgetDockableMixin, QtWidgets.QDialog):
+# class MyDockableWindow(MayaQWidgetDockableMixin, QtWidgets.QDialog):
+class MyDockableWindow(QtWidgets.QDialog):
     TOOL_NAME = 'YG_DNA_v1.0'
 
     selected_filter = "DNA (*.dna)"
 
     def __init__(self, parent=get_maya_win()):
-        delete_workspace_control(self.TOOL_NAME + 'WorkspaceControl')
+        # delete_workspace_control(self.TOOL_NAME + 'WorkspaceControl')
+
 
         super(self.__class__, self).__init__(parent=parent)
         # self.mayaMainWindow = get_maya_win()
@@ -249,5 +251,11 @@ class MyDockableWindow(MayaQWidgetDockableMixin, QtWidgets.QDialog):
 
             # YG_DNA.save_setLOD_dna()
 
+try:
+    my_win.deleteLater()
+except:
+    pass
+
 my_win = MyDockableWindow()
-my_win.show(dockable=True)
+# my_win.show(dockable=True)
+my_win.show()
