@@ -235,23 +235,23 @@ def save_setLOD_dna():
 '''
 modify taransform
 '''
-# top joint
-myJnt = ''
-if cmds.ls('spine_04', type='joint'):
-    myJnt = 'spine_04'
-if cmds.ls('DHIhead:spine_04', type='joint'):
-    myJnt = 'DHIhead:spine_04'
-
-# all joint
-myAllJnt = cmds.listRelatives(myJnt, c=True, ad=True, type='joint')
-
-# DNA
-DNA = cmds.ls('rl4Embedded*')[0]
-
 # path
 python_folder_path = f"{ROOT_DIR}/module"
 
 def disconnectRL4():
+    # top joint
+    myJnt = ''
+    if cmds.ls('spine_04', type='joint'):
+        myJnt = 'spine_04'
+    if cmds.ls('DHIhead:spine_04', type='joint'):
+        myJnt = 'DHIhead:spine_04'
+
+    # all joint
+    myAllJnt = cmds.listRelatives(myJnt, c=True, ad=True, type='joint')
+
+    # DNA
+    DNA = cmds.ls('rl4Embedded*')[0]
+
     # disconnect
     myChannel = ['tx','ty','tz','rx','ry','rz','sx','sy','sz']
     for jnt in myAllJnt:
@@ -268,6 +268,16 @@ def disconnectRL4():
                 pass
 
 def select_loop_bones():
+    # top joint
+    myJnt = ''
+    if cmds.ls('spine_04', type='joint'):
+        myJnt = 'spine_04'
+    if cmds.ls('DHIhead:spine_04', type='joint'):
+        myJnt = 'DHIhead:spine_04'
+
+    # all joint
+    myAllJnt = cmds.listRelatives(myJnt, c=True, ad=True, type='joint')
+
     # head mesh
     ogmesh = cmds.ls('head_lod0_mesh')[0]
     newmesh = cmds.ls('head_lod0_mesh1')[0]
