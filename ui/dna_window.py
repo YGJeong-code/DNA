@@ -47,23 +47,14 @@ def get_maya_win():
             return obj
     raise RuntimeError("Could not find MayaWindow instance")
 
-def delete_workspace_control(control):
-    if cmds.workspaceControl(control, q=True, exists=True):
-        cmds.workspaceControl(control, e=True, close=True)
-        cmds.deleteUI(control, control=True)
-
 # class MyDockableWindow(MayaQWidgetDockableMixin, QtWidgets.QDialog):
 class MyDockableWindow(QtWidgets.QDialog):
-    TOOL_NAME = 'YG_DNA_v1.0'
+    TOOL_NAME = 'YG_DNA_v1.1'
 
     selected_filter = "DNA (*.dna)"
 
     def __init__(self, parent=get_maya_win()):
-        # delete_workspace_control(self.TOOL_NAME + 'WorkspaceControl')
-
-
         super(self.__class__, self).__init__(parent=parent)
-        # self.mayaMainWindow = get_maya_win()
         self.setObjectName(self.__class__.TOOL_NAME)
 
         self.setWindowFlags(QtCore.Qt.Window)
@@ -95,6 +86,7 @@ class MyDockableWindow(QtWidgets.QDialog):
         self.DNAViewer = QtWidgets.QPushButton('DNA Viewer')
         self.currentDNA = QtWidgets.QPushButton('Memory Current DNA Veterx Position')
         self.checkLOD = QtWidgets.QCheckBox('LOD_3_4')
+        self.modifyTransform = QtWidgets.QPushButton('Modify Joint and Vertex Transform')
         self.saveDNA = QtWidgets.QPushButton('Save Modify DNA')
         self.Assemble = QtWidgets.QPushButton('Assemble Maya Scene')
 
@@ -106,41 +98,46 @@ class MyDockableWindow(QtWidgets.QDialog):
         self.separatorLine_1.setFrameShape( QtWidgets.QFrame.HLine )
         self.separatorLine_1.setFrameShadow( QtWidgets.QFrame.Raised )
 
-        self.separatorLine_2 = QtWidgets.QFrame()
-        self.separatorLine_2.setFrameShape( QtWidgets.QFrame.HLine )
-        self.separatorLine_2.setFrameShadow( QtWidgets.QFrame.Raised )
-
         '''
         layout
         '''
-        file_path_layout = QtWidgets.QHBoxLayout()
-        file_path_layout.addWidget(self.filepath_le)
-        file_path_layout.addWidget(self.select_file_path_btn)
-
-        modify_file_path_layout = QtWidgets.QHBoxLayout()
-        modify_file_path_layout.addWidget(self.modify_filepath_le)
-        modify_file_path_layout.addWidget(self.select_modify_file_path_btn)
-
-        form_layout_1 = QtWidgets.QFormLayout()
-        form_layout_1.addRow("DNA :", file_path_layout)
-
-        form_layout_2 = QtWidgets.QFormLayout()
-        form_layout_2.addRow("Modify DNA :", modify_file_path_layout)
-
+        # top
         btn_layout_0 = QtWidgets.QHBoxLayout()
         btn_layout_0.addWidget(QtWidgets.QLabel("DNA Calibration"))
         btn_layout_0.addWidget(self.DNAViewer)
 
+        # 1st
+        file_path_layout = QtWidgets.QHBoxLayout()
+        file_path_layout.addWidget(self.filepath_le)
+        file_path_layout.addWidget(self.select_file_path_btn)
+
+        form_layout_1 = QtWidgets.QFormLayout()
+        form_layout_1.addRow("DNA :", file_path_layout)
+
+        # 2nd
         btn_layout_1 = QtWidgets.QVBoxLayout()
         btn_layout_1.addWidget(QtWidgets.QLabel("2nd"))
         btn_layout_1.addWidget(self.currentDNA)
 
+        # 3rd
         chk_layout = QtWidgets.QHBoxLayout()
         chk_layout.addWidget(QtWidgets.QLabel("modify rig in maya..."))
         chk_layout.addWidget(self.checkLOD)
+        layout_3rd = QtWidgets.QVBoxLayout()
+        layout_3rd.addWidget(self.modifyTransform)
+
+        # 4th
+        modify_file_path_layout = QtWidgets.QHBoxLayout()
+        modify_file_path_layout.addWidget(self.modify_filepath_le)
+        modify_file_path_layout.addWidget(self.select_modify_file_path_btn)
+
+        form_layout_2 = QtWidgets.QFormLayout()
+        form_layout_2.addRow("Modify DNA :", modify_file_path_layout)
 
         btn_layout_2 = QtWidgets.QVBoxLayout()
         btn_layout_2.addWidget(self.saveDNA)
+
+        # 5th
         btn_layout_2.addWidget(QtWidgets.QLabel("5th"))
         btn_layout_2.addWidget(self.Assemble)
 
@@ -148,18 +145,28 @@ class MyDockableWindow(QtWidgets.QDialog):
         add widget
         '''
         main_layout = QtWidgets.QVBoxLayout(self)
+
+        # top
         main_layout.addLayout(btn_layout_0)
         main_layout.addWidget(self.separatorLine_1)
-        # main_layout.addWidget(QtWidgets.QLabel("DNA Calibration"))
+
+        # 1st
         main_layout.addWidget(QtWidgets.QLabel("1st"))
         main_layout.addLayout(form_layout_1)
+
+        # 2nd
         main_layout.addLayout(btn_layout_1)
+
+        # 3rd
         main_layout.addWidget(QtWidgets.QLabel("3rd"))
         main_layout.addLayout(chk_layout)
+        main_layout.addLayout(layout_3rd)
+
+        # 4th, 5th
         main_layout.addWidget(QtWidgets.QLabel("4th"))
         main_layout.addLayout(form_layout_2)
         main_layout.addLayout(btn_layout_2)
-        # main_layout.addWidget(self.separatorLine_2)
+
         main_layout.addStretch()
 
     def create_connections(self):
@@ -167,6 +174,7 @@ class MyDockableWindow(QtWidgets.QDialog):
         self.select_file_path_btn.clicked.connect(self.show_file_select_dialog)
         self.currentDNA.clicked.connect(self.on_button_pressed)
         self.checkLOD.toggled.connect(self.on_check_box_toggled)
+        self.modifyTransform.clicked.connect(self.on_button_pressed)
         self.select_modify_file_path_btn.clicked.connect(self.show_modify_file_select_dialog)
         self.saveDNA.clicked.connect(self.on_button_pressed)
         self.Assemble.clicked.connect(self.on_button_pressed)
@@ -192,7 +200,7 @@ class MyDockableWindow(QtWidgets.QDialog):
 
     def on_button_pressed(self):
         sender = self.sender()
-        # print ('{0} : pressed'.format(sender.text()))
+        print ('{0} : pressed'.format(sender.text()))
 
         if sender.text() == 'Memory Current DNA Veterx Position':
             # print (self.filepath_le.text())
@@ -206,6 +214,8 @@ class MyDockableWindow(QtWidgets.QDialog):
                 self.modify_filepath_le.setText(file_name)
 
             YG_DNA.memory_current_DNA_vertex_position()
+
+
 
         elif sender.text() == 'Save Modify DNA':
             # print (self.modify_filepath_le.text())
@@ -237,6 +247,12 @@ class MyDockableWindow(QtWidgets.QDialog):
             print ('viewer')
 
             show_dna_viewer_window()
+
+        elif sender.text() == 'Modify Joint and Vertex Transform':
+            print ('Modify Joint / Vertex Transform')
+
+            YG_DNA.disconnectRL4()
+            YG_DNA.select_loop_bones()
 
     def on_check_box_toggled(self):
         sender = self.sender()
