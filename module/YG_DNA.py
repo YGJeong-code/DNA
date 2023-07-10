@@ -46,8 +46,10 @@ else:
     environ["MAYA_PLUG_IN_PATH"] = LIB_DIR
 
 # Adds directories to path
-syspath.insert(0, ROOT_DIR)
-syspath.insert(0, LIB_DIR)
+if ROOT_DIR not in syspath:
+    syspath.insert(0, ROOT_DIR)
+if LIB_DIR not in syspath:
+    syspath.insert(0, LIB_DIR)
 
 from dna import DataLayer_All, FileStream, Status, BinaryStreamReader, BinaryStreamWriter
 from dnacalib import (
@@ -238,6 +240,158 @@ modify taransform
 # path
 python_folder_path = f"{ROOT_DIR}/module"
 
+def jointTransfer():
+    # top joint
+    myJnt = ''
+    if cmds.ls('spine_04', type='joint'):
+        myJnt = 'spine_04'
+    if cmds.ls('DHIhead:spine_04', type='joint'):
+        myJnt = 'DHIhead:spine_04'
+
+    # all joint
+    myAllJnt = cmds.listRelatives(myJnt, c=True, ad=True, type='joint')
+
+    # DNA
+    DNA = cmds.ls('rl4Embedded*')[0]
+
+    '''
+    disconnect DNA
+    '''
+    myChannel = ['tx','ty','tz','rx','ry','rz','sx','sy','sz']
+    for jnt in myAllJnt:
+        for channel in myChannel:
+            connections = cmds.listConnections(jnt + "." + channel, source=True, plugs=True)
+            if connections:
+                input_node = cmds.ls(connections[0], long=True)[0]
+
+                if DNA in input_node:
+                    #print("Input node for {}.{}: {}".format(jnt, channel, input_node))
+                    cmds.disconnectAttr (input_node, jnt+'.'+channel)
+            else:
+                # print("No input node found for {}.{}".format(jnt, channel))
+                pass
+
+    '''
+    loop joint
+    '''
+    # head mesh
+    ogmesh = cmds.ls('head_lod0_mesh')[0]
+    newmesh = cmds.ls('head_lod0_mesh1')[0]
+
+    #selecting the bone//edit the bone name here
+    bone_List = myAllJnt
+    cmds.select( clear=True )
+
+    #Starting bone loop
+    for boneID in range(len(bone_List)):
+        bone = bone_List[boneID]
+        if 'TeethUpper' in bone or 'TeethLower' in bone:
+            pass
+        else:
+            # print('---------- bone transfer (', boneID, '/', len(bone_List), ') : ', bone, '----------')
+
+            # exec(open(python_folder_path+"/OG_Mesh.py").read())
+            # exec(open(python_folder_path+"/Get_Bone_Data.py").read())
+            # exec(open(python_folder_path+"/New_Mesh.py").read())
+            # exec(open(python_folder_path+"/Vertex_Offset.py").read())
+            # exec(open(python_folder_path+"/Set_Bone_Data.py").read())
+
+            '''
+            1.OG_Mesh
+            '''
+            # get the mesh vertex position
+            sel1 = cmds.ls(ogmesh)
+            # get the dag path
+            selection_list = om.MSelectionList ()
+            selection_list.add(sel1[0])
+            dag_path = selection_list.getDagPath (0)
+            # creating Mfn Mesh
+            mfn_mesh1 = om.MFnMesh(dag_path)
+
+            #get the full number of vertex in mesh for loop
+            pp = mfn_mesh1.getPoints()
+            length = len(pp)
+
+            #looping to get vertex coordinates of all points in first mesh
+            Q = 0
+            while Q < length:
+            	points1 = mfn_mesh1.getPoint(Q, space=om.MSpace.kWorld)
+            	Q = Q+1
+
+            '''
+            2.Get_Bone_Data
+            '''
+            selected = cmds.select(bone)
+            b = cmds.xform(selected,q=1,ws=1,t=1)
+            bx = b[0]
+            by = b[1]
+            bz = b[2]
+            BonePoint = om.MPoint(b)
+
+
+            #loop to get distances of each verts from the selected bone
+            R = 0
+            distList = []
+            while R < length:
+            	distance  = BonePoint.distanceTo(mfn_mesh1.getPoint(R, space=om.MSpace.kWorld))
+            	distList.append(distance)
+            	R=R+1
+
+
+            #find the min distance vertex ID
+            minDist = (min(distList))
+            minDistID = (distList.index(min(distList)))
+
+            #giving the M1 variables the coordinates of the closest vertex to the bone
+            pointMin = mfn_mesh1.getPoint(minDistID, space=om.MSpace.kWorld)
+            M1X = pointMin.x
+            M1Z = pointMin.z
+            M1Y = pointMin.y
+
+            '''
+            3.New_Mesh
+            '''
+            # get the mesh vertex position
+            sel2 = cmds.ls(newmesh)
+            # get the dag path
+            selection_list = om.MSelectionList ()
+            selection_list.add(sel2[0])
+            dag_path = selection_list.getDagPath (0)
+            # creating Mfn Mesh
+            mfn_mesh2 = om.MFnMesh(dag_path)
+
+            #creating M2 variables to store coordinate of the closest vertex in the new mesh
+            points2 = mfn_mesh2.getPoint(minDistID, space=om.MSpace.kWorld)
+
+            M2X = points2.x
+            M2Z = points2.z
+            M2Y = points2.y
+
+            '''
+            4.Vertex_Offset
+            '''
+            offsetX = M2X-(M1X-bx)
+            offsetY = M2Y-(M1Y-by)
+            offsetZ = M2Z-(M1Z-bz)
+
+            '''
+            5.Set_Bone_Data
+            '''
+            selected = cmds.select(bone)
+            #cmds.xform(selected,ws=1,t=(offsetX, offsetY, offsetZ))
+            cmds.move( offsetX, offsetY, offsetZ, absolute=True, ws=True, pcp=True )
+
+    for bone in cmds.ls('*Pupil'):
+        cmds.setAttr(bone+'.sx', 0)
+        cmds.setAttr(bone+'.sy', 0)
+        cmds.setAttr(bone+'.sz', 0)
+
+    # done
+    print('bone transfer Done!!')
+
+    myBlend = cmds.blendShape(newmesh, ogmesh)
+    cmds.setAttr(myBlend[0]+'.'+newmesh, 1)
+
 def disconnectRL4():
     # top joint
     myJnt = ''
@@ -292,7 +446,7 @@ def select_loop_bones():
         if 'TeethUpper' in bone or 'TeethLower' in bone:
             pass
         else:
-            print('---------- bone transfer (', boneID, '/', len(bone_List), ') : ', bone, '----------')
+            # print('---------- bone transfer (', boneID, '/', len(bone_List), ') : ', bone, '----------')
 
             exec(open(python_folder_path+"/OG_Mesh.py").read())
             exec(open(python_folder_path+"/Get_Bone_Data.py").read())

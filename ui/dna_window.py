@@ -35,8 +35,10 @@ else:
     environ["MAYA_PLUG_IN_PATH"] = LIB_DIR
 
 # Adds directories to path
-syspath.insert(0, ROOT_DIR)
-syspath.insert(0, LIB_DIR)
+if ROOT_DIR not in syspath:
+    syspath.insert(0, ROOT_DIR)
+if LIB_DIR not in syspath:
+    syspath.insert(0, LIB_DIR)
 
 # this example is intended to be used in Maya
 from dna_viewer import show_dna_viewer_window
@@ -50,7 +52,6 @@ def get_maya_win():
 # class MyDockableWindow(MayaQWidgetDockableMixin, QtWidgets.QDialog):
 class MyDockableWindow(QtWidgets.QDialog):
     TOOL_NAME = 'YG_DNA_v1.1'
-
     selected_filter = "DNA (*.dna)"
 
     def __init__(self, parent=get_maya_win()):
@@ -217,6 +218,7 @@ class MyDockableWindow(QtWidgets.QDialog):
 
 
 
+
         elif sender.text() == 'Save Modify DNA':
             # print (self.modify_filepath_le.text())
             print (YG_DNA.MODIFIED_CHARACTER_DNA)
@@ -251,8 +253,9 @@ class MyDockableWindow(QtWidgets.QDialog):
         elif sender.text() == 'Modify Joint and Vertex Transform':
             print ('Modify Joint / Vertex Transform')
 
-            YG_DNA.disconnectRL4()
-            YG_DNA.select_loop_bones()
+            # YG_DNA.disconnectRL4()
+            # YG_DNA.select_loop_bones()
+            YG_DNA.jointTransfer()
 
     def on_check_box_toggled(self):
         sender = self.sender()
